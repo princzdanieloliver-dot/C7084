@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telefonok API</title>
+</head>
+<body>
+    <h1>Telefonok API végpont tesztelés</h1>
+    <div class="data">
+        <table id="getAll">
+            <tr>
+                <th>Márka</th>
+                <th>Kiadás</th>
+                <th>Típus</th>
+                <th>Ár</th>
+            </tr>
+        </table>
+    </div>
+    <div class="data">
+        <form id="postData">
+            <label for="marka">Márka</label>
+            <input type="text" placeholder="pl.: Apple, Samsung, stb." id="marka">
+            <label for="kiadas">Kiadás</label>
+            <input type="text" placeholder="pl.: iPhone 15, Galaxy S24, stb." id="kiadas">
+            <label for="tipus">Típus</label>
+            <input type="text" placeholder="pl.: Pro 256GB, Ultra 512GB, stb." id="tipus">
+            <label for="ar">Ár</label>
+            <input type="number" placeholder="pl.: 549990, 599990, stb." id="ar">
+            <button type="submit" id="postButton">Küldés</button>
+        </form>
+    </div>
+    <script>
+        function LoadTelefonok(){
+            fetch('http://localhost:4000/api/telefonok')
+            .then(res => res.json())
+            .then(body => {
+                const getTable = document.getElementById('getAll')
+                getTable.innerHTML = ""
+                body.data.map(x => {
+                    const newTr = document.createElement('tr')
+
+                    const Marka = document.createElement('td')
+                    Marka.textContent = x.Marka
+
+                    const Kiadas = document.createElement('td')
+                    Kiadas.textContent = x.Kiadas
+
+                    const Tipus = document.createElement('td')
+                    Tipus.textContent = x.Tipus
+
+                    const Ar = document.createElement('td')
+                    Ar.textContent = x.Ar
+
+                    newTr.appendChild(Marka); newTr.appendChild(Kiadas);
+                    newTr.appendChild(Tipus); newTr.appendChild(Ar);
+                    getTable.appendChild(newTr)
+                })
+            })
+        }
+        LoadTelefonok()
+
+        document.getElementById('postButton').addEventListener('click',
+            (e) => {
+                e.preventDefault()
+
+                const marka = document.getElementById("marka").value
+                const kiadas = document.getElementById("kiadas").value
+                const tipus = document.getElementById("tipus").value
+                const ar = document.getElementById("ar").value
+
+                const telefonData = {
+                    Marka: marka,
+                    Kiadas: kiadas,
+                    Tipus: tipus,
+                    Ar: ar
+                }
+
+                fetch('http://localhost:4000/api/telefonok', {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(telefonData)
+                })
+                .then(res => res.json())
+                .then(answer => {
+                    console.log("Szerver válasz:", answer)
+                    alert("Az adatok sikeresen elküldve a szervernek!")
+                    LoadTelefonok()
+                })
+                .catch(err => {
+                    console.error("Hiba történt:", err)
+                    alert("Hiba az adatok küldése során!")
+                })
+            }
+        )
+    </script>
+</body>
+</html>

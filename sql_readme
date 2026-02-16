@@ -1,0 +1,222 @@
+## Adatbázis áttekintése
+
+Az adatbázis egy telefonértékesítési rendszert modellez. A célja annak nyilvántartása, hogy:
+
+* milyen telefonmodellek léteznek,
+* mely boltok működnek,
+* az egyes boltokban mely telefonból mennyit adtak el.
+
+A rendszer relációs adatmodellre épül. Ez azt jelenti, hogy az adatok külön táblákban vannak tárolva, és ezek a táblák elsődleges és idegen kulcsokon keresztül kapcsolódnak egymáshoz.
+
+Az adatbázis három fő táblából áll:
+
+1. Telefonok
+2. Boltok
+3. Eladasok
+
+Az Eladasok tábla kapcsolótáblaként működik a Telefonok és a Boltok között.
+
+---
+
+## 1. Telefonok tábla
+
+### A tábla szerepe
+
+A Telefonok tábla a rendszer törzsadatait tartalmazza a telefonmodellekről. Egy rekord egy konkrét telefonmodellt azonosít, amely rendelkezik márkával, kiadással, típussal és árral.
+
+Ez a tábla nem az eladásokat tárolja, hanem magukat a termékeket.
+
+### Mit ábrázol?
+
+A valóságban ez megfelel egy termékkatalógusnak, például:
+
+* Apple – iPhone 15 – Pro 256GB – 549990 Ft
+* Samsung – Galaxy S24 – Ultra 512GB – 579990 Ft
+
+### Fő mezők
+
+* TelefonId
+  Elsődleges kulcs. Egyedi azonosító minden telefonmodellhez.
+  Az IDENTITY biztosítja, hogy automatikusan növekvő értéket kapjon.
+
+* Marka
+  A gyártó neve (például Apple, Samsung).
+
+* Kiadas
+  A modellcsalád vagy generáció megnevezése (például iPhone 15, Galaxy S24).
+
+* Tipus
+  A konkrét konfiguráció vagy változat (például Pro 256GB).
+
+* Ar
+  A telefon eladási ára forintban.
+
+### Megkötések
+
+* CHECK (Ar > 0)
+  Az ár nem lehet nulla vagy negatív.
+
+* UNIQUE (Marka, Kiadas, Tipus)
+  Ugyanaz a kombináció nem szerepelhet kétszer. Ez biztosítja, hogy egy konkrét modell csak egyszer létezzen a rendszerben.
+
+### Funkcionális szerep
+
+Ez a tábla:
+
+* referenciaadatokat szolgáltat az eladásokhoz,
+* biztosítja, hogy az Eladasok tábla csak létező telefonra hivatkozhasson,
+* lehetővé teszi az ár alapú bevételszámítást.
+
+---
+
+## 2. Boltok tábla
+
+### A tábla szerepe
+
+A Boltok tábla a vállalat fizikai vagy online üzleteit tartalmazza. Egy rekord egy konkrét boltot azonosít.
+
+Ez szintén törzsadat-tábla.
+
+### Mit ábrázol?
+
+Valós megfelelője egy üzletnyilvántartás, például:
+
+* MobilPont – Budapest – Váci út 12.
+* TeleCenter – Győr – Baross Gábor út 5.
+
+### Fő mezők
+
+* BoltId
+  Elsődleges kulcs. Egyedi azonosító minden bolt számára.
+
+* BoltNev
+  A bolt neve.
+
+* Varos
+  A település neve.
+
+* Cim
+  A pontos cím.
+
+* Telefon
+  Kapcsolattartási telefonszám.
+
+* Email
+  Kapcsolattartási email cím.
+
+### Megkötések
+
+* UNIQUE (BoltNev, Cim)
+  Ugyanaz a nevű és című bolt nem szerepelhet kétszer.
+
+### Funkcionális szerep
+
+Ez a tábla:
+
+* azonosítja az értékesítési helyszíneket,
+* biztosítja, hogy az Eladasok csak létező boltokra hivatkozhassanak,
+* lehetővé teszi városonkénti vagy boltonkénti kimutatások készítését.
+
+---
+
+## 3. Eladasok tábla
+
+### A tábla szerepe
+
+Az Eladasok tábla tranzakciós adatokat tárol. Ez a tábla rögzíti, hogy:
+
+* melyik telefonból,
+* melyik boltban,
+* mennyit adtak el,
+* mikor történt az eladás.
+
+Ez a tábla teremti meg a kapcsolatot a Telefonok és a Boltok között.
+
+### Mit ábrázol?
+
+A valóságban ez megfelel egy értékesítési naplónak vagy forgalmi kimutatásnak.
+
+Példa:
+
+* 2026-01-15
+  MobilPont
+  Apple iPhone 15 Pro 256GB
+  7 darab
+
+### Fő mezők
+
+* EladasId
+  Elsődleges kulcs. Egyedi azonosító minden eladási rekordhoz.
+
+* TelefonId
+  Idegen kulcs a Telefonok táblára.
+  Meghatározza, melyik telefonról van szó.
+
+* BoltId
+  Idegen kulcs a Boltok táblára.
+  Meghatározza, melyik boltban történt az eladás.
+
+* EladottDb
+  Az eladott darabszám.
+
+* EladasDatum
+  Az eladás dátuma.
+
+### Megkötések
+
+* CHECK (EladottDb > 0)
+  Nem lehet nulla vagy negatív darabszám.
+
+* FOREIGN KEY (TelefonId)
+  Csak létező telefonra lehet hivatkozni.
+
+* FOREIGN KEY (BoltId)
+  Csak létező boltra lehet hivatkozni.
+
+### Funkcionális szerep
+
+Ez a tábla:
+
+* lehetővé teszi a kimutatásokat (összes eladott darabszám, bevétel),
+* biztosítja az adatkonzisztenciát idegen kulcsokkal,
+* modellezi a valós üzleti folyamatot.
+
+---
+
+## Táblák közötti kapcsolat
+
+A rendszer logikája a következő:
+
+Telefonok (1) —— (N) Eladasok (N) —— (1) Boltok
+
+Ez azt jelenti:
+
+* Egy telefon több eladási rekordban is szerepelhet.
+* Egy bolt több eladási rekordkal rendelkezhet.
+* Egy eladási rekord pontosan egy telefonhoz és pontosan egy bolthoz tartozik.
+
+Ez klasszikus egy-a-többhöz kapcsolat mindkét irányban, ahol az Eladasok tábla a központi tranzakciós entitás.
+
+---
+
+## Logikai működés összefoglalása
+
+1. A Telefonok tábla definiálja a termékeket.
+2. A Boltok tábla definiálja az értékesítési helyeket.
+3. Az Eladasok tábla összekapcsolja a kettőt, és rögzíti a forgalmi adatokat.
+
+Az adatmodell normalizált:
+
+* Nincs ismétlődő adat több táblában.
+* Az ár csak a Telefonok táblában szerepel.
+* A bolt adatai csak a Boltok táblában szerepelnek.
+* Az Eladasok csak hivatkozik ezekre.
+
+Ez biztosítja:
+
+* az adatkonzisztenciát,
+* a redundancia minimalizálását,
+* a könnyű lekérdezhetőséget,
+* a bővíthetőséget.
+
+Az így felépített adatbázis alkalmas arra, hogy egy frontend–backend alkalmazás GET és POST műveleteken keresztül biztonságosan és strukturáltan kezelje a telefonértékesítési adatokat.
